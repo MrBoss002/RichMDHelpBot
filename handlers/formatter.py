@@ -1,3 +1,4 @@
+import re
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ParseMode
@@ -7,19 +8,54 @@ from database import set_channel_footer, get_channel_footer, delete_channel_foot
 
 router = Router()
 
+# --- Custom Markdown / Shorthand Transpiler ---
+
+def parse_custom_markdown(text: str) -> str:
+    # 1. Code block shortcut: /// code /// -> <pre><code>code</code></pre>
+    text = re.sub(r"///\n?(.*?)\n?///", r"<pre><code>\1</code></pre>", text, flags=re.DOTALL)
+
+    # 2. Collapsible block shortcut: ???Title??? Body -> <details><summary>Title</summary>Body</details>
+    text = re.sub(r"\?\?\?(.*?)\?\?\?\s*(.*)", r"<details><summary>\1</summary>\2</details>", text)
+
+    # 3. Pull-quote shortcut: """quote — author""" -> <aside>quote<cite>author</cite></aside>
+    text = re.sub(r'"""(.*?)\s*—\s*(.*?)"""', r"<aside>\1<cite>\2</cite></aside>", text)
+
+    # 4. Formulas shortcut: $ formula $ and $$ formula $$
+    text = re.sub(r"\$\$(.*?)\$\$", r"<tg-math-block>\1</tg-math-block>", text, flags=re.DOTALL)
+    text = re.sub(r"\$(.*?)\$", r"<tg-math>\1</tg-math>", text)
+
+    # 5. Headings: #_ Heading -> Bold Header
+    text = re.sub(r"^#+_\s*(.*?)$", r"<b>\1</b>", text, flags=re.MULTILINE)
+
+    # 6. Checkboxes: - [ ] and - [x]
+    text = re.sub(r"^- \[ \]\s*", r"☐ ", text, flags=re.MULTILINE)
+    text = re.sub(r"^- \[x\]\s*", r"☑️ ", text, flags=re.MULTILINE)
+
+    # 7. Horizontal rule: --- -> divider line
+    text = re.sub(r"^---$", r"━━━━━━━━━━━━━━━━━━", text, flags=re.MULTILINE)
+
+    # 8. Standard Markdown bold/italic fallback
+    text = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", text)
+    text = re.sub(r"(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)", r"<i>\1</i>", text)
+
+    return text
+
+# --- Keyboards ---
+
 def get_guides_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="📝 Markdown Guide", callback_query_data="guide_md"),
+                InlineKeyboardButton(text="📖 Markdown Guide", callback_query_data="guide_md"),
                 InlineKeyboardButton(text="🌐 HTML Guide", callback_query_data="guide_html")
             ],
             [
-                InlineKeyboardButton(text="🖼 Media & Tags", callback_query_data="guide_media"),
-                InlineKeyboardButton(text="📢 Channel Features", callback_query_data="guide_channel")
+                InlineKeyboardButton(text="🖼 Media Guide", callback_query_data="guide_media"),
+                InlineKeyboardButton(text="📢 Channel Guide", callback_query_data="guide_channel")
             ],
             [
-                InlineKeyboardButton(text="⬅️ Back to Main Menu", callback_query_data="menu_main")
+                InlineKeyboardButton(text="🎨 Full Demo", callback_query_data="guide_demo"),
+                InlineKeyboardButton(text="ℹ️ About", callback_query_data="menu_about")
             ]
         ]
     )
@@ -27,119 +63,139 @@ def get_guides_keyboard() -> InlineKeyboardMarkup:
 def get_back_to_guides_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="⬅️ Back to Guides", callback_query_data="menu_guides")]
+            [InlineKeyboardButton(text="⬅️ Back to Menu", callback_query_data="menu_guides")]
         ]
     )
 
-# --- Guide Handlers ---
+# --- Interactive Guide Handlers ---
 
 @router.callback_query(F.data == "menu_guides")
 async def cb_guides_menu(call: CallbackQuery):
     guide_text = (
-        "📖 <b>Formatting Guides & Cheatsheets</b>\n\n"
-        "Select a topic below to learn how to structure rich messages, expandable text, formulas, and media links."
+        "📖 <b>Formatting Guides</b>\n\n"
+        "Send Markdown or HTML formatted text directly to this bot. "
+        "The bot will return a beautifully formatted preview that you can forward directly to your channel!"
     )
     await call.message.edit_text(guide_text, reply_markup=get_guides_keyboard(), parse_mode="HTML")
 
 @router.callback_query(F.data == "guide_md")
 async def cb_guide_md(call: CallbackQuery):
     text = (
-        "📝 <b>Markdown Formatting Guide</b>\n\n"
-        "<b>Basic Styles:</b>\n"
-        "• <code>*bold text*</code> → <b>bold text</b>\n"
-        "• <code>_italic text_</code> → <i>italic text</i>\n"
-        "• <code>~strikethrough~</code> → <s>strikethrough</s>\n"
-        "• <code>||spoiler||</code> → <tg-spoiler>spoiler</tg-spoiler>\n"
-        "• <code>`inline code`</code> → <code>inline code</code>\n\n"
-        "<b>Code Block:</b>\n"
-        "```python\nprint('Hello World')\n```\n\n"
-        "<b>Blockquote:</b>\n"
-        "<code>> This is a quote message</code>\n\n"
-        "Send any Markdown-formatted text to the bot to test it live!"
+        "📖 <b>Markdown Guide</b>\n\n"
+        "<b>Text styles:</b>\n"
+        "<code>**bold**</code> <code>*italic*</code> <code>~~strike~~</code> <code>`code`</code>\n\n"
+        "<b>Headings:</b>\n"
+        "<code>#_ Heading 1</code>\n"
+        "<code>##_ Heading 2</code>\n\n"
+        "<b>Lists & Tasks:</b>\n"
+        "- milk\n"
+        "- [ ] todo\n"
+        "- [x] done\n\n"
+        "<b>Code block shortcut:</b>\n"
+        "<code>///\nprint('hello')\n///</code>"
     )
     await call.message.edit_text(text, reply_markup=get_back_to_guides_keyboard(), parse_mode="HTML")
 
 @router.callback_query(F.data == "guide_html")
 async def cb_guide_html(call: CallbackQuery):
     text = (
-        "🌐 <b>HTML Tags Guide</b>\n\n"
-        "Telegram supports a clean subset of HTML tags:\n\n"
-        "• <code>&lt;b&gt;bold&lt;/b&gt;</code> → <b>bold</b>\n"
-        "• <code>&lt;i&gt;italic&lt;/i&gt;</code> → <i>italic</i>\n"
-        "• <code>&lt;u&gt;underline&lt;/u&gt;</code> → <u>underline</u>\n"
-        "• <code>&lt;s&gt;strikethrough&lt;/s&gt;</code> → <s>strikethrough</s>\n"
-        "• <code>&lt;tg-spoiler&gt;spoiler&lt;/tg-spoiler&gt;</code> → <tg-spoiler>spoiler</tg-spoiler>\n"
-        "• <code>&lt;code&gt;code&lt;/code&gt;</code> → <code>code</code>\n"
-        "• <code>&lt;a href='URL'&gt;Link Text&lt;/a&gt;</code> → Hyperlink\n"
-        "• <code>&lt;blockquote&gt;Quote&lt;/blockquote&gt;</code> → Quote box"
+        "🌐 <b>HTML Guide</b>\n\n"
+        "<b>Text styles:</b>\n"
+        "<code>&lt;b&gt;bold&lt;/b&gt;</code> <code>&lt;i&gt;italic&lt;/i&gt;</code> <code>&lt;u&gt;underline&lt;/u&gt;</code> <code>&lt;tg-spoiler&gt;spoiler&lt;/tg-spoiler&gt;</code>\n\n"
+        "<b>Expandable & quotes:</b>\n"
+        "<code>&lt;details&gt;&lt;summary&gt;Title&lt;/summary&gt;Content&lt;/details&gt;</code>\n"
+        "<code>&lt;blockquote&gt;Quote&lt;/blockquote&gt;</code>\n\n"
+        "<b>Formulas:</b>\n"
+        "<code>&lt;tg-math&gt;x^2 + y^2&lt;/tg-math&gt;</code>"
     )
     await call.message.edit_text(text, reply_markup=get_back_to_guides_keyboard(), parse_mode="HTML")
 
 @router.callback_query(F.data == "guide_media")
 async def cb_guide_media(call: CallbackQuery):
     text = (
-        "🖼 <b>Media Embedding & Custom Tags</b>\n\n"
-        "<b>Hyperlinked Media (Invisible Preview):</b>\n"
-        "You can embed direct image links inside a zero-width space HTML tag to display images without cluttering your text link list:\n\n"
-        "<code>&lt;a href=\"https://link-to-your-image.jpg\"&gt;&#8203;&lt;/a&gt;</code>\n\n"
-        "<b>Spoiler Media:</b>\n"
-        "Wrap text or links inside spoiler tags to keep media hidden until clicked."
+        "🖼 <b>Media Guide</b>\n\n"
+        "<b>Single Photo / Video:</b>\n"
+        "<code>![caption](https://example.com/photo.jpg)</code>\n\n"
+        "<b>Invisible Media Preview:</b>\n"
+        "<code>&lt;a href=\"https://link-to-your-image.jpg\"&gt;&#8203;&lt;/a&gt;</code>"
     )
     await call.message.edit_text(text, reply_markup=get_back_to_guides_keyboard(), parse_mode="HTML")
 
 @router.callback_query(F.data == "guide_channel")
 async def cb_guide_channel(call: CallbackQuery):
     text = (
-        "📢 <b>Channel Setup & Auto-Formatting</b>\n\n"
-        "<b>How to setup:</b>\n"
-        "1. Add @RichMDHelpBot as an <b>Administrator</b> to your channel.\n"
-        "2. Grant permissions to <b>Post Messages</b> and <b>Edit Messages</b>.\n"
-        "3. Any post published or updated in your channel will automatically be formatted using HTML or Markdown settings!"
+        "📢 <b>Channel Setup</b>\n\n"
+        "1. Send your formatted raw text to this bot.\n"
+        "2. The bot will instantly return the rendered message.\n"
+        "3. Forward that message directly into your channel!\n\n"
+        "<b>Footer Management:</b>\n"
+        "• <code>/setfooter &lt;channel_id&gt; &lt;text&gt;</code>\n"
+        "• <code>/delfooter &lt;channel_id&gt;</code>"
     )
     await call.message.edit_text(text, reply_markup=get_back_to_guides_keyboard(), parse_mode="HTML")
 
-@router.callback_query(F.data == "menu_channel")
-async def cb_channel_menu(call: CallbackQuery):
-    await cb_guide_channel(call)
-
-@router.callback_query(F.data == "menu_settings")
-async def cb_settings_menu(call: CallbackQuery):
+@router.callback_query(F.data == "guide_demo")
+async def cb_guide_demo(call: CallbackQuery):
     text = (
-        "⚙️ <b>Bot Settings</b>\n\n"
-        "• <b>Default Parse Mode:</b> HTML / MarkdownV2\n"
-        "• <b>Link Preview:</b> Enabled\n"
-        "• <b>Channel Auto-Format:</b> Active\n\n"
-        "<i>All default parameters are optimized for maximum compatibility.</i>"
+        "🎨 <b>Full Demo</b>\n"
+        "A sample showing every feature together:\n\n"
+        "<b>1) Styles</b>\n"
+        "<b>bold</b> · <i>italic</i> · <s>strike</s> · <code>code</code> · <u>underline</u> · <tg-spoiler>spoiler</tg-spoiler>\n\n"
+        "<b>2) Lists & tasks</b>\n"
+        "• first item\n"
+        "• second item\n"
+        "☑️ done\n"
+        "☐ pending\n\n"
+        "<b>3) Quote</b>\n"
+        "<blockquote>Knowledge is power. Always.</blockquote>\n\n"
+        "<b>4) Pull-quote</b>\n"
+        "<aside>Simplicity is the ultimate sophistication.<cite>Da Vinci</cite></aside>\n\n"
+        "<b>5) Formulas</b>\n"
+        "Inline <tg-math>a^2 + b^2 = c^2</tg-math> and block:\n"
+        "<tg-math-block>\\sum_{i=1}^n i = \\frac{n(n + 1)}{2}</tg-math-block>\n\n"
+        "<b>6) Code block</b>\n"
+        "<pre><code class=\"language-python\">def hi():\n    print(\"hello world\")</code></pre>\n\n"
+        "<b>7) Table</b>\n"
+        "<table>"
+        "<tr><th>Name</th><th>Score</th></tr>"
+        "<tr><td>Ali</td><td>95</td></tr>"
+        "<tr><td>Reza</td><td>88</td></tr>"
+        "</table>\n\n"
+        "<b>8) Expandable</b>\n"
+        "<details><summary>Tap to reveal</summary>Hidden content revealed!</details>\n\n"
+        "<b>9) Live time & map</b>\n"
+        "[time: 2026-07-01 20:00] [map: 35.6892, 51.3890]"
     )
     await call.message.edit_text(
         text, 
-        reply_markup=InlineKeyboardMarkup(
-            inline_keyboard=[[InlineKeyboardButton(text="⬅️ Back to Main Menu", callback_query_data="menu_main")]]
-        ), 
-        parse_mode="HTML"
+        reply_markup=get_back_to_guides_keyboard(), 
+        parse_mode=ParseMode.HTML,
+        disable_web_page_preview=True
     )
 
-# --- Footer Management Commands ---
+@router.callback_query(F.data == "menu_about")
+async def cb_menu_about(call: CallbackQuery):
+    text = (
+        "ℹ️ <b>About RichMDHelpBot</b>\n\n"
+        "This bot helps channel admins format text, create code snippets, build tables, insert math formulas, "
+        "and generate clean channel posts that can be forwarded directly."
+    )
+    await call.message.edit_text(text, reply_markup=get_back_to_guides_keyboard(), parse_mode="HTML")
+
+# --- Footer Commands ---
 
 @router.message(F.text.startswith("/setfooter"))
 async def cmd_set_footer(message: Message):
-    # Format: /setfooter <channel_id> <footer_text>
     args = message.text.split(maxsplit=2)
     if len(args) < 3:
-        await message.answer(
-            "⚠️ <b>Usage:</b> <code>/setfooter &lt;channel_id&gt; &lt;footer_text&gt;</code>\n\n"
-            "<b>Example:</b>\n<code>/setfooter -1002164685014 📢 Join @MrBossTG for updates!</code>",
-            parse_mode="HTML"
-        )
+        await message.answer("⚠️ <b>Usage:</b> <code>/setfooter &lt;channel_id&gt; &lt;footer_text&gt;</code>", parse_mode="HTML")
         return
-
     try:
         channel_id = int(args[1])
-        footer_text = args[2]
-        await set_channel_footer(channel_id, footer_text)
-        await message.answer(f"✅ <b>Footer saved for channel:</b> <code>{channel_id}</code>", parse_mode="HTML")
+        await set_channel_footer(channel_id, args[2])
+        await message.answer(f"✅ Footer saved for channel ID <code>{channel_id}</code>", parse_mode="HTML")
     except ValueError:
-        await message.answer("❌ Invalid Channel ID. Make sure it's a numeric ID starting with <code>-100</code>.", parse_mode="HTML")
+        await message.answer("❌ Invalid channel ID.", parse_mode="HTML")
 
 @router.message(F.text.startswith("/delfooter"))
 async def cmd_del_footer(message: Message):
@@ -147,46 +203,29 @@ async def cmd_del_footer(message: Message):
     if len(args) < 2:
         await message.answer("⚠️ <b>Usage:</b> <code>/delfooter &lt;channel_id&gt;</code>", parse_mode="HTML")
         return
-
     try:
         channel_id = int(args[1])
         await delete_channel_footer(channel_id)
-        await message.answer(f"🗑 <b>Footer deleted for channel:</b> <code>{channel_id}</code>", parse_mode="HTML")
+        await message.answer(f"🗑 Footer removed for channel ID <code>{channel_id}</code>", parse_mode="HTML")
     except ValueError:
-        await message.answer("❌ Invalid Channel ID.", parse_mode="HTML")
+        await message.answer("❌ Invalid channel ID.", parse_mode="HTML")
 
-# --- Channel Auto-Formatter & Footer Engine ---
+# --- Channel Auto-Post & User Renderer Handlers ---
 
 @router.channel_post(F.text)
 async def auto_format_channel_post(post: Message):
     footer = await get_channel_footer(post.chat.id)
-    
-    # If a custom footer exists, append it to the post
-    if footer:
-        updated_text = f"{post.text}\n\n{footer}"
-        try:
-            await post.edit_text(updated_text, parse_mode=ParseMode.HTML, disable_web_page_preview=False)
-        except TelegramBadRequest:
-            # If HTML parsing fails, fall back to posting plain updated text
-            await post.edit_text(updated_text, disable_web_page_preview=False)
-
-# --- Echo & Live Preview Engine ---
+    raw = parse_custom_markdown(post.text)
+    final_text = f"{raw}\n\n{footer}" if footer else raw
+    try:
+        await post.edit_text(final_text, parse_mode=ParseMode.HTML, disable_web_page_preview=False)
+    except TelegramBadRequest:
+        pass
 
 @router.message(F.text & ~F.text.startswith("/"))
 async def process_user_text(message: Message):
-    raw_text = message.text
-
-    # Attempt to render as HTML first, fallback to standard text if formatting tags are malformed
+    formatted = parse_custom_markdown(message.text)
     try:
-        await message.answer(
-            f"✨ <b>Rich Message Preview:</b>\n\n{raw_text}",
-            parse_mode=ParseMode.HTML,
-            disable_web_page_preview=False
-        )
+        await message.answer(formatted, parse_mode=ParseMode.HTML, disable_web_page_preview=False)
     except TelegramBadRequest as e:
-        await message.answer(
-            f"⚠️ <b>Parsing Error:</b> Your text contains invalid markup tags.\n\n"
-            f"<b>Details:</b> <code>{e.message}</code>\n\n"
-            "<b>Original Text:</b>\n" + raw_text,
-            parse_mode="HTML"
-        )
+        await message.answer(f"⚠️ <b>Parsing Error:</b>\n<code>{e.message}</code>", parse_mode="HTML")
