@@ -1,8 +1,14 @@
+import os
 import aiosqlite
 import config
 
 
 async def init_db():
+    # Make sure target directory exists before SQLite connects
+    db_dir = os.path.dirname(config.DB_PATH)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
+
     async with aiosqlite.connect(config.DB_PATH) as db:
         # Table to store unique bot users for /stats and /broadcast
         await db.execute("""
