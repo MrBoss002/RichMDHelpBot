@@ -3,6 +3,8 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramBadRequest
 
+from database import set_channel_footer, get_channel_footer, delete_channel_footer
+
 router = Router()
 
 def get_guides_keyboard() -> InlineKeyboardMarkup:
@@ -117,6 +119,57 @@ async def cb_settings_menu(call: CallbackQuery):
         parse_mode="HTML"
     )
 
+# --- Footer Management Commands ---
+
+@router.message(F.text.startswith("/setfooter"))
+async def cmd_set_footer(message: Message):
+    # Format: /setfooter <channel_id> <footer_text>
+    args = message.text.split(maxsplit=2)
+    if len(args) < 3:
+        await message.answer(
+            "⚠️ <b>Usage:</b> <code>/setfooter &lt;channel_id&gt; &lt;footer_text&gt;</code>\n\n"
+            "<b>Example:</b>\n<code>/setfooter -1002164685014 📢 Join @MrBossTG for updates!</code>",
+            parse_mode="HTML"
+        )
+        return
+
+    try:
+        channel_id = int(args[1])
+        footer_text = args[2]
+        await set_channel_footer(channel_id, footer_text)
+        await message.answer(f"✅ <b>Footer saved for channel:</b> <code>{channel_id}</code>", parse_mode="HTML")
+    except ValueError:
+        await message.answer("❌ Invalid Channel ID. Make sure it's a numeric ID starting with <code>-100</code>.", parse_mode="HTML")
+
+@router.message(F.text.startswith("/delfooter"))
+async def cmd_del_footer(message: Message):
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2:
+        await message.answer("⚠️ <b>Usage:</b> <code>/delfooter &lt;channel_id&gt;</code>", parse_mode="HTML")
+        return
+
+    try:
+        channel_id = int(args[1])
+        await delete_channel_footer(channel_id)
+        await message.answer(f"🗑 <b>Footer deleted for channel:</b> <code>{channel_id}</code>", parse_mode="HTML")
+    except ValueError:
+        await message.answer("❌ Invalid Channel ID.", parse_mode="HTML")
+
+# --- Channel Auto-Formatter & Footer Engine ---
+
+@router.channel_post(F.text)
+async def auto_format_channel_post(post: Message):
+    footer = await get_channel_footer(post.chat.id)
+    
+    # If a custom footer exists, append it to the post
+    if footer:
+        updated_text = f"{post.text}\n\n{footer}"
+        try:
+            await post.edit_text(updated_text, parse_mode=ParseMode.HTML, disable_web_page_preview=False)
+        except TelegramBadRequest:
+            # If HTML parsing fails, fall back to posting plain updated text
+            await post.edit_text(updated_text, disable_web_page_preview=False)
+
 # --- Echo & Live Preview Engine ---
 
 @router.message(F.text & ~F.text.startswith("/"))
@@ -135,5 +188,5 @@ async def process_user_text(message: Message):
             f"⚠️ <b>Parsing Error:</b> Your text contains invalid markup tags.\n\n"
             f"<b>Details:</b> <code>{e.message}</code>\n\n"
             "<b>Original Text:</b>\n" + raw_text,
-            parse_mode=ParseMode.HTML
+            parse_mode="HTML"
         )
