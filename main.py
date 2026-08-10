@@ -7,12 +7,13 @@ from aiogram.client.default import DefaultBotProperties
 import config
 from database import init_db
 from middlewares.fsub import ForceSubMiddleware
+from handlers import start, admin, formatter
 
 # Enable logging
 logging.basicConfig(level=logging.INFO)
 
 async def main():
-    # Initialize SQLite tables on startup
+    # Initialize SQLite database schema
     await init_db()
 
     bot = Bot(
@@ -21,13 +22,16 @@ async def main():
     )
     dp = Dispatcher()
 
-    # Register Forced Subscription Middleware across all outer message handlers
+    # Register Forced Subscription Middleware
     dp.message.outer_middleware(ForceSubMiddleware())
     dp.callback_query.outer_middleware(ForceSubMiddleware())
 
+    # Include Router Handlers
+    dp.include_router(start.router)
+    dp.include_router(admin.router)
+    dp.include_router(formatter.router)
+
     logging.info("Starting RichMDHelpBot with FSub enabled...")
-    
-    # Handlers will be registered here in Phase 3
     
     await dp.start_polling(bot)
 
