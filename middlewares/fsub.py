@@ -37,7 +37,7 @@ class ForceSubMiddleware(BaseMiddleware):
                     InlineKeyboardButton(text="📢 Join Channel", url=config.FSUB_CHANNEL_LINK)
                 ],
                 [
-                    InlineKeyboardButton(text="🔄 Try Again", callback_query_data="check_fsub")
+                    InlineKeyboardButton(text="🔄 Try Again", callback_data="check_fsub")
                 ]
             ]
         )
