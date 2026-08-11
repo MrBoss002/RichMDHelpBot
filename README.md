@@ -76,6 +76,23 @@ python main.py
 5. Add your Environment Variables in the Render settings tab and deploy!
 
 ---
+## Direct Deploy Buttons:
+
+<p align="center">
+  <a href="https://render.com/deploy?repo=https://github.com/MrBoss002/RichMDHelpBot">
+    <img src="https://img.shields.io/badge/Deploy%20To-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white" alt="Deploy to Render">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://railway.app/new/template?template=https://github.com/MrBoss002/RichMDHelpBot">
+    <img src="https://img.shields.io/badge/Deploy%20To-Railway-fa96bc?style=for-the-badge&logo=railway&logoColor=white" alt="Deploy to Railway">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://app.koyeb.com/deploy?type=git&repository=MrBoss002/RichMDHelpBot">
+    <img src="https://img.shields.io/badge/Deploy%20To-Koyeb-f8f563?style=for-the-badge&logo=koyeb&logoColor=white" alt="Deploy to Koyeb">
+  </a>
+</p>
+
+---
 
 ## 📄 License
 
