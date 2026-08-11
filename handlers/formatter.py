@@ -46,16 +46,16 @@ def get_guides_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="📖 Markdown Guide", callback_query_data="guide_md"),
-                InlineKeyboardButton(text="🌐 HTML Guide", callback_query_data="guide_html")
+                InlineKeyboardButton(text="📖 Markdown Guide", callback_data="guide_md"),
+                InlineKeyboardButton(text="🌐 HTML Guide", callback_data="guide_html")
             ],
             [
-                InlineKeyboardButton(text="🖼 Media Guide", callback_query_data="guide_media"),
-                InlineKeyboardButton(text="📢 Channel Guide", callback_query_data="guide_channel")
+                InlineKeyboardButton(text="🖼 Media Guide", callback_data="guide_media"),
+                InlineKeyboardButton(text="📢 Channel Guide", callback_data="guide_channel")
             ],
             [
-                InlineKeyboardButton(text="🎨 Full Demo", callback_query_data="guide_demo"),
-                InlineKeyboardButton(text="ℹ️ About", callback_query_data="menu_about")
+                InlineKeyboardButton(text="🎨 Full Demo", callback_data="guide_demo"),
+                InlineKeyboardButton(text="ℹ️ About", callback_data="menu_about")
             ]
         ]
     )
@@ -63,7 +63,7 @@ def get_guides_keyboard() -> InlineKeyboardMarkup:
 def get_back_to_guides_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="⬅️ Back to Menu", callback_query_data="menu_guides")]
+            [InlineKeyboardButton(text="⬅️ Back to Menu", callback_data="menu_guides")]
         ]
     )
 
