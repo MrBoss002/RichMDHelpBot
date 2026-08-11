@@ -10,12 +10,12 @@ def get_main_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="📖 Formatting Guides", callback_query_data="menu_guides"),
-                InlineKeyboardButton(text="📢 Channel Settings", callback_query_data="menu_channel")
+                InlineKeyboardButton(text="📖 Formatting Guides", callback_data="menu_guides"),
+                InlineKeyboardButton(text="📢 Channel Settings", callback_data="menu_channel")
             ],
             [
-                InlineKeyboardButton(text="ℹ️ About Bot", callback_query_data="menu_about"),
-                InlineKeyboardButton(text="⚙️ Settings", callback_query_data="menu_settings")
+                InlineKeyboardButton(text="ℹ️ About Bot", callback_data="menu_about"),
+                InlineKeyboardButton(text="⚙️ Settings", callback_data="menu_settings")
             ]
         ]
     )
@@ -23,7 +23,7 @@ def get_main_keyboard() -> InlineKeyboardMarkup:
 def get_back_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="⬅️ Back to Main Menu", callback_query_data="menu_main")]
+            [InlineKeyboardButton(text="⬅️ Back to Main Menu", callback_data="menu_main")]
         ]
     )
 
