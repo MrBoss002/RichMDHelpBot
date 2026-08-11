@@ -82,19 +82,34 @@ python main.py
 - This project is open-source and available under the MIT License.
 
 ---
+  
+  <div align="center">
+  <h2>📬 Developer Space</h2>
+  <p>Need help, want to report a bug, or connect with the developer?</p>
 
+  <p>
+    <a href="https://t.me/MrBossTG">
+      <img src="https://img.shields.io/badge/Main%20Channel%20Join%20For%20Updates%20%26%20Releases-26A5E4?style=for-the-badge&logo=telegram&logoColor=white" alt="Main Channel" />
+    </a>
+  </p>
 
-<p align="center">
-  <a href="https://t.me/MrBossTG">
-    <img src="https://img.shields.io/badge/Main%20Channel-Join%20For%20Updates%20%26%20Releases-26A5E4?style=for-the-badge&logo=telegram&logoColor=white" alt="Main Channel">
-  </a>
-</p>
+  <p>
+    <a href="https://t.me/MrBoss002">
+      <img src="https://img.shields.io/badge/💬%20Help%20%26%20Feedback%20Contact%20Admin-1613ad?style=for-the-badge&logo=telegram&logoColor=white" alt="Help and Feedback" />
+    </a>
+    &nbsp;&nbsp;
+    <a href="https://sites.google.com/view/zerotwo-onlinestore">
+      <img src="https://img.shields.io/badge/🛍️%20ZeroTwo%20Store%20Catalog-13ad7c?style=for-the-badge&logo=google-chrome&logoColor=white" alt="ZeroTwo Store" />
+    </a>
+  </p>
 
-<p align="center">
-  <a href="https://youtube.com/@MrBoss002">
-    <img src="https://img.shields.io/badge/YouTube-MrBoss002-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube">
-  </a>
-  <a href="https://t.me/MrBoss002">
-    <img src="https://img.shields.io/badge/Contact-Owner-0088cc?style=for-the-badge&logo=telegram&logoColor=white" alt="Contact Owner">
-  </a>
-</p>
+  <p>
+    <a href="https://youtube.com/@MrBoss002">
+      <img src="https://img.shields.io/badge/YouTube%20MrBoss002-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube" />
+    </a>
+  </p>
+
+  <p>
+    Developed with ❤️ by <b>Muhammad Risvan C</b> (<a href="https://github.com/MrBoss002">@MrBoss002</a>)
+  </p>
+</div>
